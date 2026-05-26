@@ -9,7 +9,7 @@ app.use(express.json({ limit: '10mb' }));
 
 // 🔑 [수정 완료] OpenAI API 키 보안 설정 (환경변수 적용)
 const openai = new OpenAI({
-  apiKey: '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'
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 // 🗓️ 일간 단위로 고정된 인덱스를 반환하는 결정론적 해시 함수
