@@ -117,7 +117,6 @@ button:hover { background: #333333; transform: translateY(-1px); }
 .gen-title { font-size: 11px; font-weight: 700; color: #111111; margin-bottom: 6px; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 4px; }
 .gender-trend-row { display: flex; justify-content: space-between; font-size: 12px; margin: 3px 0; }
 .pulse-dot { display: inline-block; width: 5px; height: 5px; background: #111111; border-radius: 50%; margin-right: 6px; }
-.data-source-badge-container { margin-top: 5px; margin-bottom: 15px; padding: 8px 12px; background: #f3f4f6; border-radius: 8px; font-size: 10px; color: #4b5563; font-family: monospace; border-left: 2px solid #111111; }
 
 /* CRM 관리 사이드바 아키텍처 */
 .customer-manage-btn { align-self: flex-end; background: #ffffff; color: #000000; border: 1px solid #000000; font-size: 11px; border-radius: 8px; padding: 10px 15px; }
@@ -258,12 +257,6 @@ button:hover { background: #333333; transform: translateY(-1px); }
             <div style="display: flex; align-items: center;"><span class="pulse-dot"></span>LIVE CONSUMER BIGDATA MONITOR</div>
             <span id="lastUpdate" style="font-size: 9px; color: #6b7280; background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: normal;">SYNC: 정산 중...</span>
         </div>
-        
-        <div class="data-source-badge-container">
-            <strong>DATA PIPELINE INTEGRATION SOURCE:</strong><br>
-            • ZARA INTERNAL CRM ARCHIVE (SEARCH/PURCHASE LOG)<br>
-            • WGSN GLOBAL FASHION INDEXING BIGDATASET
-        </div>
 
         <div class="generation-grid" id="generationGrid">
             <div class="gen-box"><div class="gen-title">10대 트렌드 SEGMENT</div><div class="gender-trend-row"><span id="trend10M">남: 스트릿 힙합</span><span id="trend10F">여: 스트릿 레트로</span></div></div>
@@ -366,7 +359,6 @@ button:hover { background: #333333; transform: translateY(-1px); }
 <script>
 const BACKEND_URL = 'https://fashion-ai-2.onrender.com';
 
-// 🔄 [수정] 일간 마감 기준 타임스탬프가 연계되도록 대시보드 로직 갱신 보완
 window.addEventListener('DOMContentLoaded', async () => {
     showCustomers(); 
     try {
@@ -386,7 +378,6 @@ window.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('trend50M').innerText = `남: ${data.fifty.M}`;
             document.getElementById('trend50F').innerText = `여: ${data.fifty.F}`;
             
-            // 📅 일간 단위 고정 신뢰성을 시각적으로 입증할 동적 마감 뱃지 스크립트 결합
             const now = new Date();
             const formatTime = `${String(now.getMonth()+1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} 00:00 마감 기준`;
             document.getElementById('lastUpdate').innerText = `SYNC: ${formatTime}`;
