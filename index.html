@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>AI Fashion Target Recommender</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+body { 
+    font-family: 'Montserrat', 'Malgun Gothic', sans-serif; 
+    margin: 0; padding: 0; 
+    background: #E5E7EB; 
+    color: #111111; 
+    line-height: 1.6; 
+    display: flex; 
+    min-height: 100vh; 
+    overflow-x: hidden; 
+}
+
+h1 { 
+    font-family: 'Playfair Display', serif; 
+    font-weight: 700; 
+    font-size: 34px; 
+    letter-spacing: 2px; 
+    margin-bottom: 25px; 
+    border-bottom: 2px solid #000000; 
+    padding-bottom: 25px; 
+    text-align: left; 
+}
+h2, h3 { font-family: 'Playfair Display', 'Malgun Gothic', serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+/* [레이아웃 영역] */
+.main-container { 
+    flex: 0 0 66.66%; 
+    padding: 60px; 
+    background: rgba(255, 255, 255, 0.5); 
+    backdrop-filter: blur(15px);
+    text-align: left; 
+    box-sizing: border-box;
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.right-dash-container { 
+    flex: 1; 
+    padding: 60px 40px; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 25px; 
+    box-sizing: border-box; 
+}
+
+section { 
+    background: #ffffff; 
+    padding: 30px; 
+    margin: 25px 0; 
+    border-radius: 12px; 
+    border: 1px solid rgba(0,0,0,0.04); 
+    box-shadow: 0 10px 35px rgba(0,0,0,0.02); 
+    position: relative;
+    overflow: hidden;
+}
+
+h3 { font-size: 13px; margin-top: 0; margin-bottom: 15px; color: #222222; letter-spacing: 0.5px;}
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+input, select { 
+    padding: 13px 15px; 
+    margin: 5px 0; 
+    border-radius: 10px; 
+    border: 1px solid #c8cbd0; 
+    font-size: 14px; 
+    width: 100%; 
+    box-sizing: border-box; 
+    transition: all 0.3s ease;
+}
+input:focus, select:focus { outline: none; border-color: #000000; background-color: #ffffff; }
+
+button { 
+    padding: 10px 20px; 
+    background: #000000; 
+    color: #ffffff; 
+    border: none; 
+    cursor: pointer; 
+    border-radius: 10px; 
+    font-weight: 600; 
+    font-size: 13px; 
+    transition: all 0.25s ease; 
+}
+button:hover { background: #333333; transform: translateY(-1px); }
+
+.btn-primary { 
+    font-size: 15px; 
+    padding: 20px; 
+    width: 100%; 
+    border-radius: 12px; 
+    margin-top: 10px;
+    background: #111111;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+/* 4단계 가이드 프레임워크 */
+.framework-guide-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 30px; }
+.guide-box { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.01); }
+.guide-box.num1 { border-left: 4px solid #111111; }
+.guide-box.num2 { border-left: 4px solid #6b7280; }
+.guide-box.num3 { border-left: 4px solid #9ca3af; }
+.guide-box.num4 { border-left: 4px solid #d1d5db; opacity: 0.75; }
+
+.guide-num { font-family: 'Playfair Display', serif; font-size: 11px; font-weight: 700; color: #6b7280; margin-bottom: 3px; }
+.guide-label { font-size: 13px; font-weight: 700; color: #111111; margin-bottom: 6px; }
+.guide-desc { font-size: 11px; color: #4b5563; line-height: 1.45; word-break: keep-all; }
+
+/* 라이브 실시간 트렌드 모니터 구조 */
+.trend-monitor-card { background: #ffffff; border-radius: 14px; padding: 25px; border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+.generation-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+.gen-box { background: #f3f4f6; border-radius: 8px; padding: 12px; text-align: left; }
+.gen-title { font-size: 11px; font-weight: 700; color: #111111; margin-bottom: 6px; border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 4px; }
+.gender-trend-row { display: flex; justify-content: space-between; font-size: 12px; margin: 3px 0; }
+.pulse-dot { display: inline-block; width: 5px; height: 5px; background: #111111; border-radius: 50%; margin-right: 6px; }
+.data-source-badge-container { margin-top: 5px; margin-bottom: 15px; padding: 8px 12px; background: #f3f4f6; border-radius: 8px; font-size: 10px; color: #4b5563; font-family: monospace; border-left: 2px solid #111111; }
+
+/* CRM 관리 사이드바 아키텍처 */
+.customer-manage-btn { align-self: flex-end; background: #ffffff; color: #000000; border: 1px solid #000000; font-size: 11px; border-radius: 8px; padding: 10px 15px; }
+.customer-sidebar { position: fixed; top: 0; right: -520px; width: 480px; height: 100%; background: #ffffff; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); padding: 40px; z-index: 1000; box-sizing: border-box; }
+.customer-sidebar.open { right: 0; box-shadow: -10px 0 50px rgba(0,0,0,0.15); }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #eeeeee; padding-bottom: 15px; }
+.crm-item-card { border: 1px solid #e5e7eb; padding: 16px; margin: 10px 0; border-radius: 12px; background:#ffffff; display: flex; justify-content: space-between; align-items: center; }
+.crm-btn-group button { font-size: 11px; padding: 6px 12px; margin-left: 4px; border-radius: 6px; font-weight: bold; }
+.btn-edit { background: #222222; color: #fff; }
+.btn-delete { background: #ef4444; color: #fff; }
+
+/* 항목별 수정 모달 컴포넌트 스타일 */
+.modal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:2000; align-items:center; justify-content:center; }
+.modal-content { background:#ffffff; border-radius:16px; padding:30px; width:360px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align:left; }
+.modal-header { font-family:'Playfair Display'; font-size:18px; font-weight:700; margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px; display:flex; justify-content:space-between; }
+.modal-footer { margin-top:20px; display:flex; gap:10px; }
+.modal-footer button { flex:1; padding:12px; }
+
+/* 결과 리포트 디자인 및 최우선 타겟 블랙 이중 테두리 스펙 */
+.card { 
+    border: 1px solid #e5e7eb; 
+    padding: 24px; 
+    margin: 16px 0; 
+    border-radius: 16px; 
+    background: #ffffff; 
+    position: relative;
+    transition: all 0.2s ease;
+}
+.sub-card { border: 1px solid #6b7280; }
+.general-card { border: 1px solid #9ca3af; }
+.mismatch-card { opacity: 0.35; background: #fdfdfd; border: 1px dashed #d1d5db; }
+
+.winner-card { 
+    border: 3px solid #111111 !important; 
+    background: #fcfcfb !important;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.06) !important;
+}
+.winner-card::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px; right: 3px; bottom: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.08); 
+    border-radius: 11px;
+    pointer-events: none;
+}
+
+.mvp-picked-card { 
+    border: 3px solid #4f46e5 !important; 
+    background: #fbfbfe !important; 
+    box-shadow: 0 12px 40px rgba(79, 70, 229, 0.12) !important;
+}
+.mvp-picked-card::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px; right: 3px; bottom: 3px;
+    border: 1px solid rgba(79, 70, 229, 0.15);
+    border-radius: 11px;
+    pointer-events: none;
+}
+
+/* 뱃지 및 서식 */
+.recommend-badge { background: #111111; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+.sub-recommend-badge { background: #6b7280; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.general-recommend-badge { background: #9ca3af; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.mismatch-badge { background: #d1d5db; color: #4b5563; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.mvp-badge { background: #4f46e5; color: #ffffff; padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
+
+.uid-badge { font-size: 10px; background: #000000; color: #ffffff; padding: 3px 8px; border-radius: 4px; font-weight: 700; margin-left: 6px; font-family: monospace; }
+.reason-text { font-size: 13.5px; color: #333333; margin-top: 15px; line-height: 1.6; word-break: keep-all; }
+.highlight-text { background: linear-gradient(to top, #fef08a 85%, transparent 85%); padding: 2px 6px; font-weight: 700; border-radius: 4px; color: #000000; }
+
+.ai-matching-factors { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; font-size: 11px; font-weight: 600; }
+.factor-tag { background: #f3f4f6; color: #4b5563; padding: 4px 8px; border-radius: 4px; }
+.factor-tag.match { background: #d1fae5; color: #065f46; }
+.factor-tag.mvp-tag { background: #ede9fe; color: #5b21b6; }
+</style>
+</head>
+<body>
+
+<div class="main-container">
+    <h1>AI FASHION TARGET RECOMMENDER</h1>
+
+    <div class="framework-guide-container">
+        <div class="guide-box num1">
+            <div class="guide-num">STAGE 01</div>
+            <div class="guide-label">최우선 타겟</div>
+            <div class="guide-desc">성별 일치 및 고유 스타일 무드가 부합하며, 라이브 트렌드 혹은 단가군 요소를 완벽히 공유하는 베스트 세그먼트.</div>
+        </div>
+        <div class="guide-box num2">
+            <div class="guide-num">STAGE 02</div>
+            <div class="guide-label">차순위 타겟</div>
+            <div class="guide-desc">개인 선호 취향과 상품 무드가 일부 교차하거나 해당 세대의 핵심 유행 트렌드 지표가 연계되는 잠재적 타겟.</div>
+        </div>
+        <div class="guide-box num3">
+            <div class="guide-num">STAGE 03</div>
+            <div class="guide-label">일반 타겟</div>
+            <div class="guide-desc">성별 카테고리 외에는 상품 스타일 무드와 프로필 간의 직접적인 유기적 연결고리가 발견되지 않은 대중적 세그먼트.</div>
+        </div>
+        <div class="guide-box num4">
+            <div class="guide-num">STAGE 04</div>
+            <div class="guide-label">카테고리 제외</div>
+            <div class="guide-desc">의류 카테고리 성별 기준과 고객 프로필 성별 인자가 일치하지 않아 연산 매칭 레이어에서 원천 제외된 대상.</div>
+        </div>
+    </div>
+
+    <section>
+        <h3>상품 이미지 업로드 (PRODUCT IMAGE)</h3>
+        <input type="file" id="productImage">
+        <img id="preview" width="150" style="display:none; margin-top: 15px; border-radius: 8px; border:1px solid #ddd;">
+    </section>
+
+    <div class="grid-2">
+        <section>
+            <h3>상품 판매 가격 (PRICE)</h3>
+            <input type="number" id="productPrice" placeholder="가격을 입력하세요 (원)">
+        </section>
+
+        <section>
+            <h3>의류 성별 카테고리 (CATEGORY)</h3>
+            <select id="productGender">
+                <option value="남성복">남성복 (Menswear)</option>
+                <option value="여성복">여성복 (Womenswear)</option>
+                <option value="남녀공용">남녀공용 (Unisex)</option>
+            </select>
+        </section>
+    </div>
+
+    <button class="btn-primary" onclick="predict()">Run Target Matching Engine</button>
+
+    <div id="result"></div>
+</div>
+
+<div class="right-dash-container">
+    <button class="customer-manage-btn" onclick="toggleSidebar()">고객 데이터 관리 (CRM)</button>
+
+    <div class="trend-monitor-card">
+        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.5px; margin-bottom:15px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center;"><span class="pulse-dot"></span>LIVE CONSUMER BIGDATA MONITOR</div>
+            <span id="lastUpdate" style="font-size: 9px; color: #6b7280; background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: normal;">SYNC: 정산 중...</span>
+        </div>
+        
+        <div class="data-source-badge-container">
+            <strong>DATA PIPELINE INTEGRATION SOURCE:</strong><br>
+            • ZARA INTERNAL CRM ARCHIVE (SEARCH/PURCHASE LOG)<br>
+            • WGSN GLOBAL FASHION INDEXING BIGDATASET
+        </div>
+
+        <div class="generation-grid" id="generationGrid">
+            <div class="gen-box"><div class="gen-title">10대 트렌드 SEGMENT</div><div class="gender-trend-row"><span id="trend10M">남: 스트릿 힙합</span><span id="trend10F">여: 스트릿 레트로</span></div></div>
+            <div class="gen-box"><div class="gen-title">20대 트렌드 SEGMENT</div><div class="gender-trend-row"><span id="trend20M">남: 워크웨어 아메카지</span><span id="trend20F">여: 캐주얼 고프코어</span></div></div>
+            <div class="gen-box"><div class="gen-title">30대 트렌드 SEGMENT</div><div class="gender-trend-row"><span id="trend30M">남: 시티보이 미니멀</span><span id="trend30F">여: 미니멀 오피스</span></div></div>
+            <div class="gen-box"><div class="gen-title">40대 트렌드 SEGMENT</div><div class="gender-trend-row"><span id="trend40M">남: 클래식 수트라인</span><span id="trend40F">여: 클래식 올드머니</span></div></div>
+            <div class="gen-box">
+                <div class="gen-title">50대 트렌드 SEGMENT (ACTIVE SILVER)</div>
+                <div class="gender-trend-row">
+                    <span id="trend50M">남: 클래식 비즈니스</span>
+                    <span id="trend50F">여: 클래식 럭셔리</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="customerSidebar" class="customer-sidebar">
+    <div class="sidebar-header">
+        <h2 style="font-size:18px; margin:0;">CRM MANAGEMENT</h2>
+        <button onclick="toggleSidebar()" style="background:none; border:none; color:#000; font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    
+    <input type="text" id="crmSearchInput" placeholder="고객 이름 검색..." oninput="showCustomers()" style="margin-bottom:15px; padding:10px;">
+
+    <div id="customerList" style="max-height: 42vh; overflow-y: auto; border-bottom:1px solid #eee; padding-bottom:10px;"></div>
+
+    <div style="margin-top: 20px;">
+        <h3 style="font-size:12px; margin-bottom:10px; color:#4b5563;">신규 가상 프로필 등록</h3>
+        <div class="grid-2" style="gap:10px; margin-bottom:5px;">
+            <input type="text" id="addName" placeholder="이름" style="padding:8px 12px; font-size:13px;">
+            <input type="number" id="addAge" placeholder="나이" style="padding:8px 12px; font-size:13px;">
+        </div>
+        <div class="grid-2" style="gap:10px; margin-bottom:10px;">
+            <select id="addGender" style="padding:8px 12px; font-size:13px;">
+                <option value="여성">여성</option>
+                <option value="남성">남성</option>
+            </select>
+            <select id="addStyle" style="padding:8px 12px; font-size:13px;">
+                <option value="캐주얼">캐주얼</option>
+                <option value="스트릿">스트릿</option>
+                <option value="미니멀">미니멀</option>
+                <option value="페미닌">페미닌</option>
+                <option value="클래식">클래식</option>
+                <option value="빈티지">빈티지</option>
+            </select>
+        </div>
+        <select id="addPrice" style="padding:8px 12px; font-size:13px; margin-bottom:15px;">
+            <option value="저가">저가</option>
+            <option value="중가">중가</option>
+            <option value="고가">고가</option>
+        </select>
+        <button onclick="addNewCustomer()" style="width:100%; padding:12px; background:#000; font-size:12px; font-weight:700;">DB 프로필 추가</button>
+    </div>
+</div>
+
+<div id="editModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>고객 프로필 항목 수정</span>
+            <span onclick="closeEditModal()" style="cursor:pointer;">✕</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <div><small style="color:#666;">고객 이름</small><input type="text" id="modalName"></div>
+            <div><small style="color:#666;">고객 나이</small><input type="number" id="modalAge"></div>
+            <div>
+                <small style="color:#666;">성별</small>
+                <select id="modalGender">
+                    <option value="여성">여성</option>
+                    <option value="남성">남성</option>
+                </select>
+            </div>
+            <div>
+                <small style="color:#666;">선호 스타일 무드</small>
+                <select id="modalStyle">
+                    <option value="캐주얼">캐주얼</option>
+                    <option value="스트릿">스트릿</option>
+                    <option value="미니멀">미니멀</option>
+                    <option value="페미닌">페미닌</option>
+                    <option value="클래식">클래식</option>
+                    <option value="빈티지">빈티지</option>
+                </select>
+            </div>
+            <div>
+                <small style="color:#666;">구매 선호 단가군</small>
+                <select id="modalPrice">
+                    <option value="저가">저가</option>
+                    <option value="중가">중가</option>
+                    <option value="고가">고가</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button onclick="closeEditModal()" style="background:#e5e7eb; color:#111;">취소</button>
+            <button onclick="saveCustomerChanges()" style="background:#111; color:#fff;">저장 완료</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const BACKEND_URL = 'http://localhost:8080';
+
+// 🔄 [수정] 일간 마감 기준 타임스탬프가 연계되도록 대시보드 로직 갱신 보완
+window.addEventListener('DOMContentLoaded', async () => {
+    showCustomers(); 
+    try {
+        const response = await fetch(`${BACKEND_URL}/live-dashboard`);
+        if (response.ok) {
+            const result = await response.json();
+            const data = result.dashboardData;
+
+            document.getElementById('trend10M').innerText = `남: ${data.teen.M}`;
+            document.getElementById('trend10F').innerText = `여: ${data.teen.F}`;
+            document.getElementById('trend20M').innerText = `남: ${data.twenties.M}`;
+            document.getElementById('trend20F').innerText = `여: ${data.twenties.F}`;
+            document.getElementById('trend30M').innerText = `남: ${data.thirties.M}`;
+            document.getElementById('trend30F').innerText = `여: ${data.thirties.F}`;
+            document.getElementById('trend40M').innerText = `남: ${data.forty.M}`;
+            document.getElementById('trend40F').innerText = `여: ${data.forty.F}`;
+            document.getElementById('trend50M').innerText = `남: ${data.fifty.M}`;
+            document.getElementById('trend50F').innerText = `여: ${data.fifty.F}`;
+            
+            // 📅 일간 단위 고정 신뢰성을 시각적으로 입증할 동적 마감 뱃지 스크립트 결합
+            const now = new Date();
+            const formatTime = `${String(now.getMonth()+1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} 00:00 마감 기준`;
+            document.getElementById('lastUpdate').innerText = `SYNC: ${formatTime}`;
+            
+            console.log("📊 라이브 모니터 일간 2주 누적 트렌드 동기화 완료!");
+        }
+    } catch (error) {
+        console.error("❌ 대시보드 일간 라이브 연동 실패:", error);
+        document.getElementById('lastUpdate').innerText = "SYNC: 서버 연결 오프라인";
+    }
+});
+
+function generateBusinessID(gender, age) {
+    const genderCode = gender === "여성" ? "F" : "M";
+    return `202605-${genderCode}${age}`;
+}
+
+let userDB = [
+    { name: "양다은", age: 22, gender: "여성", style: "캐주얼", price: "중가" },
+    { name: "신승정", age: 24, gender: "남성", style: "스트릿", price: "저가" },
+    { name: "박준하", age: 25, gender: "남성", style: "미니멀", price: "고가" },
+    { name: "이서경", age: 21, gender: "여성", style: "페미닌", price: "중가" },
+    { name: "박준수", age: 20, gender: "남성", style: "클래식", price: "고가" },
+    { name: "고시니어", age: 53, gender: "여성", style: "클래식", price: "고가" }
+].map(u => ({ ...u, uid: generateBusinessID(u.gender, u.age) }));
+
+let currentEditingUid = null;
+
+function toggleSidebar() { document.getElementById('customerSidebar').classList.toggle('open'); }
+
+function showCustomers() {
+    const keyword = crmSearchInput.value.trim().toLowerCase();
+    const filtered = userDB.filter(u => u.name.toLowerCase().includes(keyword));
+
+    customerList.innerHTML = filtered.map((u, index) => `
+        <div class="crm-item-card">
+            <div>
+                <span style="font-weight:700; font-size:14px;">${u.name}</span>
+                <span class="uid-badge">${u.uid}</span>
+                <div style="font-size:11px; color:#666; margin-top:4px;">
+                    ${u.gender} / ${u.age}세 / ${u.style} / ${u.price}
+                </div>
+            </div>
+            <div class="crm-btn-group">
+                <button class="btn-edit" onclick="openEditModal('${u.uid}')">수정</button>
+                <button class="btn-delete" onclick="deleteCustomer('${u.uid}')">삭제</button>
+            </div>
+        </div>`).join("");
+}
+
+function openEditModal(uid) {
+    const user = userDB.find(u => u.uid === uid);
+    if(!user) return;
+    
+    currentEditingUid = uid;
+    document.getElementById('modalName').value = user.name;
+    document.getElementById('modalAge').value = user.age;
+    document.getElementById('modalGender').value = user.gender;
+    document.getElementById('modalStyle').value = user.style;
+    document.getElementById('modalPrice').value = user.price;
+    
+    document.getElementById('editModal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+    currentEditingUid = null;
+}
+
+function saveCustomerChanges() {
+    const user = userDB.find(u => u.uid === currentEditingUid);
+    if(!user) return;
+
+    const name = document.getElementById('modalName').value.trim();
+    const age = parseInt(document.getElementById('modalAge').value);
+    const gender = document.getElementById('modalGender').value;
+    const style = document.getElementById('modalStyle').value;
+    const price = document.getElementById('modalPrice').value;
+
+    if(!name || !age || isNaN(age)) return alert("정보 입력을 정확히 완료하세요.");
+
+    user.name = name;
+    user.age = age;
+    user.gender = gender;
+    user.style = style;
+    user.price = price;
+    user.uid = generateBusinessID(gender, age);
+
+    showCustomers();
+    closeEditModal();
+}
+
+function deleteCustomer(uid) {
+    if(confirm("해당 유저 프로필 데이터를 영구 삭제하시겠습니까?")) {
+        userDB = userDB.filter(u => u.uid !== uid);
+        showCustomers();
+    }
+}
+
+function addNewCustomer() {
+    const name = addName.value.trim();
+    const age = parseInt(addAge.value);
+    const gender = addGender.value;
+    const style = addStyle.value;
+    const price = addPrice.value;
+
+    if(!name || !age || isNaN(age)) return alert("고객 정보 입력을 완료해 주세요.");
+
+    const newObj = {
+        name: name, age: age, gender: gender, style: style, price: price,
+        uid: generateBusinessID(gender, age)
+    };
+
+    userDB.push(newObj);
+    addName.value = ""; addAge.value = "";
+    showCustomers();
+    alert(`${name}님의 세그먼트 데이터가 성공적으로 빌드되었습니다.`);
+}
+
+productImage.onchange = e => {
+    const file = e.target.files[0]; const reader = new FileReader();
+    reader.onload = ev => { preview.src = ev.target.result; preview.style.display = "block"; }; reader.readAsDataURL(file);
+};
+
+function getPriceLevel(p){ if(p < 50000) return "저가"; if(p < 150000) return "중가"; return "고가"; }
+
+function askAIEngineToCuration(user, detectedStyle, priceLevel, trendText, chosenGender) {
+    let isGenderMatch = (chosenGender === "남녀공용") || (chosenGender === "남성복" && user.gender === "남성") || (chosenGender === "여성복" && user.gender === "여성");
+    if (!isGenderMatch) {
+        return {
+            rankClass: 'mismatch', badgeText: '카테고리 제외',
+            reason: `입력된 상품 카테고리 요건([${chosenGender}])과 고객님의 프로필 성별이 상이하므로 추천 연산 레이어에서 제외되었습니다.`,
+            factors: ['성별 불일치'], microWeight: -1
+        };
+    }
+
+    let isStyleMatch = (user.style === detectedStyle);
+    let isTrendMatch = trendText.includes(user.style);
+    let isPriceMatch = (user.price === priceLevel);
+    const ageGroup = `${Math.floor(user.age / 10) * 10}대`;
+
+    let microWeight = 0;
+    if (isPriceMatch) microWeight += 10;
+    if (isTrendMatch) microWeight += 5;
+    if (user.age >= 20 && user.age <= 29) microWeight += 2; 
+
+    if (isStyleMatch && (isTrendMatch || isPriceMatch)) {
+        return {
+            rankClass: 'winner', badgeText: '최우선 타겟',
+            reason: `AI 정성적 판독 결과, 본 제품의 감성과 <span class="highlight-text">${user.name}님의 평소 스타일 무드 및 선호 단가군[${user.price}]이 완벽히 매칭</span>됩니다. 현재 ${ageGroup} 시장 내 지표 트렌드 흐름인 '${trendText}'과도 긴밀히 밀착되어 있어 가장 강력한 세일즈 전환 가치를 지닙니다.`,
+            factors: ['성별 일치', `스타일:[${detectedStyle}] 일치`], microWeight: 100 + microWeight
+        };
+    } else if (isStyleMatch || isTrendMatch) {
+        return {
+            rankClass: 'sub', badgeText: '차순위 타겟',
+            reason: `본 상품의 비주얼 속성이 고객님의 평소 추구 스타일 감성 또는 해당 연령대 메인 트렌드 분석 지표인 '${trendText}'와 <span class="highlight-text">부분적인 교집합을 형성</span>하고 있어 잠재적 구매 타겟군으로 매칭되었습니다.`,
+            factors: ['성별 일치', isStyleMatch ? '스타일 부합' : '트렌드 동조'], microWeight: 50 + microWeight
+        };
+    } else {
+        return {
+            rankClass: 'general', badgeText: '일반 타겟',
+            reason: `카테고리 성별 조건은 완전히 충족하나, 상품의 고유 속성과 고객 프로필 데이터[${user.style} / ${user.price}] 간의 유기적인 연계 밀도가 약하여 일반 판촉 마케팅 대상군으로 분류되었습니다.`,
+            factors: ['성별 일치'], microWeight: microWeight
+        };
+    }
+}
+
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+            let encoded = reader.result.toString().replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+            resolve(encoded);
+        };
+        reader.onerror = error => reject(error);
+    });
+}
+
+async function predict(){
+    const price = Number(productPrice.value); if(!price) return alert("가격을 지정해 주세요.");
+    const chosenGender = productGender.value; 
+    const file = productImage.files[0]; if(!file) return alert("이미지를 업로드해 주세요.");
+    
+    result.innerHTML = `<section style="text-align:center; padding: 40px; font-style:italic; color:#555; background:#fff; border-radius:12px;">AI 가상 신경망이 이미지 비전 분석 및 고객 프로필 매칭 연산을 실시간 수행 중...</section>`;
+
+    try {
+        const base64Image = await getBase64(file);
+
+        const analyzeResponse = await fetch(`${BACKEND_URL}/analyze`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64Image })
+        });
+
+        if (!analyzeResponse.ok) throw new Error("AI 분석 서버 응답 실패");
+        const analyzeResult = await analyzeResponse.json();
+        
+        let detectedStyle = analyzeResult.aiStyle; 
+        let aiReasonText = analyzeResult.aiReason;
+
+        const trendResponse = await fetch(`${BACKEND_URL}/biweekly-trend`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ style: detectedStyle, gender: "전체", age: 20 })
+        });
+        
+        let biweeklyData = null;
+        if (trendResponse.ok) {
+            biweeklyData = await trendResponse.json();
+        }
+
+        let priceLevel = getPriceLevel(price);
+        let curatedList = [];
+
+        userDB.forEach(u => {
+            let ageGroupFloor = Math.floor(u.age / 10) * 10;
+            let targetGenderSuffix = (u.gender === "남성") ? "M" : "F";
+            
+            let trendText = "캐주얼"; 
+            const targetId = `trend${ageGroupFloor}${targetGenderSuffix}`;
+            const el = document.getElementById(targetId);
+            if(el) {
+                trendText = el.innerText.replace("남: ", "").replace("여: ", "").trim();
+            }
+
+            let aiDecision = askAIEngineToCuration(u, detectedStyle, priceLevel, trendText, chosenGender);
+            curatedList.push({ user: u, decision: aiDecision });
+        });
+
+        const groups = { winner: [], sub: [], general: [] };
+        curatedList.forEach(item => {
+            if (groups[item.decision.rankClass]) groups[item.decision.rankClass].push(item);
+        });
+
+        let mvpUserUid = "";
+        let mvpReasonAdd = "";
+
+        Object.keys(groups).forEach(rankKey => {
+            if (groups[rankKey].length >= 3) {
+                groups[rankKey].sort((a, b) => b.decision.microWeight - a.decision.microWeight);
+                mvpUserUid = groups[rankKey][0].user.uid; 
+                mvpReasonAdd = ` <span class="highlight-text">특히 본 유저는 동일 등급 내 무더기 동점 유저 중, 가격 필터 민감도 및 유행 동조 지표가 산술적으로 가장 우수한 최상위 타겟이므로 AI가 단독 MVP로 추가 지정했습니다.</span>`;
+            }
+        });
+
+        const rankOrder = { 'winner': 1, 'sub': 2, 'general': 3, 'mismatch': 4 };
+        curatedList.sort((a, b) => rankOrder[a.decision.rankClass] - rankOrder[b.decision.rankClass]);
+
+        let cardsHtml = curatedList.map(item => {
+            let u = item.user; let d = item.decision;
+            let cardStyleClass = d.rankClass + '-card'; 
+            let badgeStyleClass = d.rankClass + '-recommend-badge';
+            let displayBadgeText = d.badgeText;
+            let finalReason = d.reason;
+
+            if (u.uid === mvpUserUid) {
+                cardStyleClass += ' mvp-picked-card';
+                badgeStyleClass = 'mvp-badge';
+                displayBadgeText = `AI 지정 최고 잠재 타겟`;
+                finalReason += mvpReasonAdd;
+                d.factors.push('AI 엄선 MVP');
+            }
+
+            let tagsHtml = d.factors.map(f => {
+                let addClass = '';
+                if(f.includes('일치') || f.includes('부합') || f.includes('동조') || f.includes('매칭')) addClass = 'match';
+                if(f.includes('MVP')) addClass = 'mvp-tag';
+                return `<span class="factor-tag ${addClass}">${f}</span>`;
+            }).join("");
+
+            return `
+                <div class="card ${cardStyleClass}">
+                    <div style="width:100%; display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span style="font-weight:700; font-size:16px;">${u.name}</span> 
+                            <span class="uid-badge">${u.uid}</span>
+                            <div style="margin-top:4px; font-size:12.5px; color:#666;">
+                                ${u.gender} / ${u.age}세 / 선호 스타일 [${u.style}] / 단가군 [${u.price}대]
+                            </div>
+                        </div>
+                        <div><span class="${badgeStyleClass}">${displayBadgeText}</span></div>
+                    </div>
+                    <div class="ai-matching-factors"><span style="color:#666; font-family:sans-serif; margin-right:4px;">AI 매칭 인자:</span> ${tagsHtml}</div>
+                    <div class="reason-text">${finalReason}</div>
+                </div>`;
+        }).join("");
+
+        let reportStatus = biweeklyData ? biweeklyData.marketStatus : "실시간 마켓 누적 지표가 안정적입니다.";
+        result.innerHTML = `
+            <div style="margin-top: 40px; border-top: 2px solid #000; padding-top: 40px;">
+                <section style="background:#111; color:#fff; padding:25px; border-radius:12px; margin:0 0 20px 0;">
+                    <div style="font-size: 18px; font-weight:600; font-family:'Playfair Display';">AI TARGET ANALYSIS INTEGRATION REPORT</div>
+                    <div style="font-size: 13px; margin-top:8px; color:#aaa; line-height: 1.5;">
+                        <strong>[AI 실시간 판독 결과]</strong> 확정 장르: <span style="color:#fff; font-weight:bold;">${detectedStyle}</span> / 예산군: ${priceLevel}가 세그먼트<br>
+                        <strong>[전문가 엔진 소견]</strong> ${aiReasonText}<br>
+                        <strong>[2주 누적 트렌드 트래픽]</strong> ${reportStatus}
+                    </div>
+                </section>
+                <h2 style="font-size:17px; margin: 30px 0 10px 0; letter-spacing:0.5px;">CRM 실시간 AI 종합 큐레이션 리포트</h2>
+                ${cardsHtml}
+            </div>`;
+
+    } catch (err) {
+        console.error(err);
+        alert("백엔드 AI 분석 엔진 연동 중 에러가 발생했습니다. Node.js 서버가 켜져 있는지 확인해 주세요.");
+        result.innerHTML = `<section style="text-align:center; padding: 20px; color:red; background:#fff; border-radius:12px;">서버와의 API 연결 실패</section>`;
+    }
+}
+</script>
+</body>
+</html>
