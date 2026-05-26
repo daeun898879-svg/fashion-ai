@@ -1,18 +1,23 @@
 const express = require('express');
 const cors = require('cors');
 const { OpenAI } = require('openai');
+const path = require('path'); // [추가] 화면 경로 연결을 위한 모듈
 const app = express();
 
 app.use(cors());
-// 대용량 이미지 전송을 위해 한도 확장
 app.use(express.json({ limit: '10mb' })); 
 
-// 🔑 [수정 완료] OpenAI API 키 보안 설정 (환경변수 적용)
+// ⭐ [진짜 핵심 추가] 사용자가 렌더 주소로 접속했을 때 index.html 화면을 던져주는 코드
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 🔑 OpenAI API 키 보안 설정
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// 🗓️ 일간 단위로 고정된 인덱스를 반환하는 결정론적 해시 함수
+// 🗓️ 결정론적 해시 함수
 function getSeededIndex(seedString, max) {
     let hash = 0;
     for (let i = 0; i < seedString.length; i++) {
@@ -129,7 +134,7 @@ app.post('/biweekly-trend', async (req, res) => {
   }
 });
 
-// ================= 🔄 3. 하루 단위로 고정되어 갱신되는 실시간 대시보드 API =================
+// ================= 🔄 3. 실시간 대시보드 API =================
 app.get('/live-dashboard', (req, res) => {
   try {
     const trendPools = {
@@ -192,6 +197,5 @@ app.get('/live-dashboard', (req, res) => {
   }
 });
 
-// ================= 🚀 [수정 완료] 포트 유연화 =================
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`🚀 AI 백엔드 서버가 포트 ${PORT}에서 정상 작동 중!`));
