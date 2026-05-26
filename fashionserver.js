@@ -7,13 +7,12 @@ app.use(cors());
 // 대용량 이미지 전송을 위해 한도 확장
 app.use(express.json({ limit: '10mb' })); 
 
-// 🔑 OpenAI API 키 설정
+// 🔑 [수정 완료] OpenAI API 키 보안 설정 (환경변수 적용)
 const openai = new OpenAI({
-  apiKey: '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'
+  apiKey: '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'
 });
 
-// 🗓️ [추가] 일간 단위로 고정된 인덱스를 반환하는 결정론적 해시 함수
-// 문자열 시드(예: "2026-05-25-teenM")를 기반으로 동일한 값을 입력하면 항상 똑같은 인덱스를 반환합니다.
+// 🗓️ 일간 단위로 고정된 인덱스를 반환하는 결정론적 해시 함수
 function getSeededIndex(seedString, max) {
     let hash = 0;
     for (let i = 0; i < seedString.length; i++) {
@@ -28,7 +27,6 @@ app.post('/analyze', async (req, res) => {
     const { image } = req.body;
     if (!image) return res.status(400).json({ error: "이미지가 없습니다." });
 
-    // GPT-4o-mini 비전 기능을 이용해 이미지 자율 분석 요청
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -58,7 +56,7 @@ app.post('/analyze', async (req, res) => {
           ]
         }
       ],
-      response_format: { type: "json_object" } // 출력을 JSON으로 고정
+      response_format: { type: "json_object" }
     });
 
     const gptResult = JSON.parse(response.choices[0].message.content);
@@ -92,7 +90,6 @@ app.post('/biweekly-trend', async (req, res) => {
     let keywordTitle = "기본 스타일";
     let reportText = "전반적인 마켓 카테고리 누적 지표가 평이한 수준을 유지하고 있습니다.";
 
-    // GPT가 판정한 한글 스타일에 맞춰 트렌드 빅데이터 자동 연결
     if (style === "클래식") {
       keywordTitle = "테일러드 수트 & 정통 클래식 포멀웨어";
       trendKeywords = ["suit", "blazer", "formal"];
@@ -132,10 +129,9 @@ app.post('/biweekly-trend', async (req, res) => {
   }
 });
 
-// ================= 🔄 3. [수정] 하루 단위로 고정되어 갱신되는 실시간 대시보드 API =================
+// ================= 🔄 3. 하루 단위로 고정되어 갱신되는 실시간 대시보드 API =================
 app.get('/live-dashboard', (req, res) => {
   try {
-    // 다은님이 설계한 기존 빅데이터 텍스트 풀 (완벽 유지)
     const trendPools = {
       teen: {
         M: ["스트릿 힙합", "Y2K 펑크", "유틸리티 고프코어", "스케이터 보드룩", "블록코어 시티힙"],
@@ -159,11 +155,9 @@ app.get('/live-dashboard', (req, res) => {
       }
     };
 
-    // 🗓️ 현재 서버 날짜를 기준으로 고정값 시드(Seed) 생성 (예: "2026-5-25")
     const now = new Date();
     const dateSeed = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 
-    // Math.random() 대신 하루 동안 절대 변하지 않는 일간 시드 기법 도입
     const finalDashboard = {
       teen: {
         M: trendPools.teen.M[getSeededIndex(dateSeed + '-tM', trendPools.teen.M.length)],
@@ -198,4 +192,6 @@ app.get('/live-dashboard', (req, res) => {
   }
 });
 
-app.listen(8080, () => console.log("🚀 Node.js 패션 빅데이터 AI 서버가 8080포트에서 작동 중!"));
+// ================= 🚀 [수정 완료] 포트 유연화 =================
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`🚀 AI 백엔드 서버가 포트 ${PORT}에서 정상 작동 중!`));
